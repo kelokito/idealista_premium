@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Idealista Premium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f4f3f0;
+  --surface: #fcfcfb;
+  --surface-2: #f0efec;
+  --border: #e2e0da;
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --text-3: #8a8983;
+  --accent: #2a78d6;
+  --accent-ink: #ffffff;
+  --fav: #e0a106;
+  --auction: #7a3fb8;
+  --ok: #0ca30c;
+  --bar-track: #e6e5e0;
+  --shadow: 0 1px 2px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06);
+  --ramp-lo: #86b6ef; --ramp-mid: #2a78d6; --ramp-hi: #0d366b;
+  --ring: #ffffff;
+  --critical: #d03b3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #111110; --surface: #1a1a19; --surface-2: #232321; --border: #33332f;
+    --text: #ffffff; --text-2: #c3c2b7; --text-3: #8d8c84;
+    --accent: #3987e5; --accent-ink: #ffffff; --fav: #f5b82e; --auction: #b07ce6; --ok: #2bc02b;
+    --bar-track: #33332f; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35);
+    --ramp-lo: #184f95; --ramp-mid: #3987e5; --ramp-hi: #cde2fb; --ring: #1a1a19; --critical: #e25555;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111110; --surface: #1a1a19; --surface-2: #232321; --border: #33332f;
+  --text: #ffffff; --text-2: #c3c2b7; --text-3: #8d8c84;
+  --accent: #3987e5; --accent-ink: #ffffff; --fav: #f5b82e; --auction: #b07ce6; --ok: #2bc02b;
+  --bar-track: #33332f; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35);
+  --ramp-lo: #184f95; --ramp-mid: #3987e5; --ramp-hi: #cde2fb; --ring: #1a1a19; --critical: #e25555;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 14px/1.45 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  display: flex; overflow: hidden;
+}
+button, input, select { font: inherit; color: inherit; }
+a { color: var(--accent); }
+
+/* ---------- panel ---------- */
+#panel {
+  width: 400px; flex: none; height: 100%; display: flex; flex-direction: column;
+  background: var(--surface); border-right: 1px solid var(--border); z-index: 2;
+}
+.head { padding: 16px 16px 12px; border-bottom: 1px solid var(--border); }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand h1 { font-size: 17px; margin: 0; letter-spacing: -.01em; }
+.brand .logo { width: 28px; height: 28px; border-radius: 8px; background: var(--accent);
+  display: grid; place-items: center; color: var(--accent-ink); font-weight: 700; font-size: 13px; }
+.brand .spacer { flex: 1; }
+.icon-btn { border: 1px solid var(--border); background: var(--surface); border-radius: 8px;
+  height: 30px; min-width: 30px; padding: 0 8px; cursor: pointer; color: var(--text-2); }
+.icon-btn:hover { background: var(--surface-2); color: var(--text); }
+.stats { margin-top: 10px; display: flex; gap: 16px; }
+.stat b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat span { color: var(--text-3); font-size: 12px; }
+.fresh { margin-top: 8px; color: var(--text-3); font-size: 11.5px; }
+
+.scroll { overflow-y: auto; flex: 1; }
+details.sec { border-bottom: 1px solid var(--border); }
+details.sec > summary { list-style: none; cursor: pointer; padding: 12px 16px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px; user-select: none; }
+details.sec > summary::-webkit-details-marker { display: none; }
+details.sec > summary::after { content: "▾"; margin-left: auto; color: var(--text-3); transition: transform .15s; }
+details.sec:not([open]) > summary::after { transform: rotate(-90deg); }
+summary small { font-weight: 400; color: var(--text-3); }
+.sec-body { padding: 0 16px 14px; display: grid; gap: 12px; }
+
+.field label, .field .lab { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--text-2); margin-bottom: 4px; }
+.field output { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; accent-color: var(--accent); margin: 0; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--border); background: var(--surface); border-radius: 999px;
+  padding: 3px 10px; cursor: pointer; font-size: 12.5px; color: var(--text-2); }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chip .n { opacity: .75; margin-left: 4px; font-variant-numeric: tabular-nums; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); cursor: pointer; }
+.check input { accent-color: var(--accent); }
+.muni-list { max-height: 180px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; display: grid; gap: 2px; }
+.muni-list .check { justify-content: space-between; }
+.muni-list .check span:last-child { color: var(--text-3); font-variant-numeric: tabular-nums; }
+.linkbtn { background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; font-size: 12.5px; }
+.wsum { font-size: 12px; color: var(--text-3); }
+
+.listbar { position: sticky; top: 0; background: var(--surface); z-index: 1; padding: 10px 16px;
+  border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.listbar select { border: 1px solid var(--border); border-radius: 8px; background: var(--surface); padding: 4px 8px; }
+.listbar .cnt { color: var(--text-3); font-size: 12.5px; margin-right: auto; }
+
+#list { padding: 8px 10px 16px; display: grid; gap: 8px; }
+.card { display: grid; grid-template-columns: 96px 1fr; gap: 10px; padding: 8px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--surface); cursor: pointer; position: relative; }
+.card:hover, .card.active { border-color: var(--accent); box-shadow: var(--shadow); }
+.thumb { width: 96px; height: 76px; border-radius: 7px; background: var(--surface-2) center/cover no-repeat;
+  display: grid; place-items: center; color: var(--text-3); font-size: 22px; }
+.card .top { display: flex; align-items: baseline; gap: 8px; }
+.price { font-weight: 700; font-size: 15.5px; font-variant-numeric: tabular-nums; }
+.pm2 { color: var(--text-3); font-size: 12px; font-variant-numeric: tabular-nums; }
+.badge { margin-left: auto; min-width: 38px; text-align: center; border-radius: 6px; padding: 1px 6px;
+  font-weight: 700; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.meta { color: var(--text-2); font-size: 12.5px; }
+.where { color: var(--text-3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.srcs { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; align-items: center; padding-right: 52px; }
+.src { font-size: 10.5px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase;
+  border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; color: var(--text-2); }
+.src.boe { border-color: var(--auction); color: var(--auction); }
+.src.warn-chip { border-color: var(--critical); color: var(--critical); text-transform: none; letter-spacing: 0; }
+.warnbox { border: 1px solid var(--critical); color: var(--critical); border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 600; }
+.card-actions { position: absolute; right: 6px; bottom: 6px; display: flex; gap: 2px; }
+.mini { border: 0; background: transparent; cursor: pointer; color: var(--text-3); font-size: 15px; padding: 2px 4px; border-radius: 6px; line-height: 1; }
+.mini:hover { background: var(--surface-2); color: var(--text); }
+.mini.on { color: var(--fav); }
+.more { margin: 4px auto 0; }
+.empty { color: var(--text-3); text-align: center; padding: 30px 10px; }
+
+/* ---------- map ---------- */
+#map { flex: 1; height: 100%; background: var(--bg); }
+.leaflet-container { font: inherit; }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; overflow: hidden; }
+.leaflet-popup-content { margin: 0; width: 300px !important; }
+.leaflet-container a.leaflet-popup-close-button { color: #fff; text-shadow: 0 0 4px rgba(0,0,0,.6); top: 4px; right: 4px; }
+.leaflet-bar a, .leaflet-control-layers { background: var(--surface); color: var(--text); border-color: var(--border); }
+.leaflet-control-layers { border-radius: 8px; }
+.leaflet-control-attribution { background: color-mix(in srgb, var(--surface) 80%, transparent) !important; color: var(--text-3); }
+.leaflet-control-attribution a { color: var(--text-2); }
+
+.pop-img { height: 150px; background: var(--surface-2) center/cover no-repeat; position: relative; }
+.pop-img .badge { position: absolute; left: 10px; bottom: 10px; font-size: 14px; padding: 3px 8px; box-shadow: var(--shadow); }
+.pop-body { padding: 12px 14px 14px; display: grid; gap: 8px; }
+.pop-title { font-weight: 600; font-size: 13.5px; line-height: 1.3; }
+.pop-price { display: flex; align-items: baseline; gap: 8px; }
+.pop-price .price { font-size: 19px; }
+.facts { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--text-2); font-size: 12.5px; }
+.bars { display: grid; gap: 5px; }
+.bar { display: grid; grid-template-columns: 104px 1fr 34px; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); }
+.bar .track { height: 6px; border-radius: 3px; background: var(--bar-track); overflow: hidden; }
+.bar .fill { height: 100%; border-radius: 3px; background: var(--accent); }
+.bar b { text-align: right; color: var(--text); font-variant-numeric: tabular-nums; font-weight: 600; }
+.dists { font-size: 11.5px; color: var(--text-3); }
+.auc { border: 1px solid var(--auction); border-radius: 8px; padding: 8px 10px; font-size: 12px; display: grid; gap: 2px; }
+.auc b { color: var(--auction); }
+.pop-links { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; padding: 5px 10px; font-size: 12.5px;
+  font-weight: 600; text-decoration: none; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.warn { font-size: 11.5px; color: var(--text-3); }
+
+.anchor-pin { display: flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 11.5px; font-weight: 600;
+  background: var(--surface); color: var(--text); border: 1.5px solid var(--text); border-radius: 999px;
+  padding: 2px 8px 2px 4px; box-shadow: var(--shadow); transform: translate(-12px, -12px); width: max-content; }
+.anchor-pin i { font-style: normal; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--text); color: var(--surface); font-size: 10px; }
+.auction-pin { width: 14px; height: 14px; border: 2px solid var(--ring); border-radius: 2px; box-shadow: 0 0 0 1px var(--auction); }
+
+.legend { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 12px; box-shadow: var(--shadow); font-size: 12px; min-width: 190px; }
+.legend .ramp { height: 10px; border-radius: 3px; margin: 6px 0 2px; }
+.legend .ticks { display: flex; justify-content: space-between; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.legend .keys { display: grid; gap: 4px; margin-top: 8px; color: var(--text-2); }
+.legend .keys span { display: inline-flex; align-items: center; gap: 6px; }
+.k-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--ramp-mid); border: 1.5px solid var(--ring); box-shadow: 0 0 0 1px var(--ramp-mid); }
+.k-sq { width: 11px; height: 11px; border-radius: 2px; background: var(--ramp-mid); border: 1.5px solid var(--ring); box-shadow: 0 0 0 1px var(--auction); }
+.k-hollow { width: 11px; height: 11px; border-radius: 50%; border: 1.5px dashed var(--text-2); }
+
+#toggle-panel { display: none; }
+
+@media (max-width: 760px) {
+  body { flex-direction: column-reverse; }
+  #panel { width: 100%; height: 48%; border-right: 0; border-top: 1px solid var(--border); }
+  body.panel-max #panel { height: 88%; }
+  #map { height: auto; }
+  #toggle-panel { display: inline-block; }
+  .legend { min-width: 0; padding: 8px 10px; }
+  .legend .keys { display: none; }
+  .leaflet-popup-content { width: 260px !important; }
+}
+</style>
+</head>
+<body>
+<aside id="panel" aria-label="Filters and listings">
+  <div class="head">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">IP</div>
+      <h1>Idealista Premium</h1>
+      <span class="spacer"></span>
+      <button class="icon-btn" id="toggle-panel" title="Expand panel">⇕</button>
+      <button class="icon-btn" id="theme" title="Toggle theme">◐</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="st-shown">0</b><span>shown</span></div>
+      <div class="stat"><b id="st-auc">0</b><span>auctions</span></div>
+      <div class="stat"><b id="st-best">–</b><span>best index</span></div>
+      <div class="stat"><b id="st-med">–</b><span>median €/m²</span></div>
+    </div>
+    <div class="fresh" id="fresh"></div>
+  </div>
+
+  <div class="scroll" id="scroll">
+    <details class="sec" open>
+      <summary>Index weights <small id="w-summary"></small></summary>
+      <div class="sec-body" id="weights"></div>
+    </details>
+
+    <details class="sec" open>
+      <summary>Filters</summary>
+      <div class="sec-body">
+        <div class="row2">
+          <div class="field"><label for="f-price">Max price <output id="o-price"></output></label>
+            <input type="range" id="f-price" min="100000" max="400000" step="5000"></div>
+          <div class="field"><label for="f-minprice">Min price <output id="o-minprice"></output></label>
+            <input type="range" id="f-minprice" min="0" max="350000" step="5000"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="f-surf">Min surface <output id="o-surf"></output></label>
+            <input type="range" id="f-surf" min="40" max="150" step="5"></div>
+          <div class="field"><label for="f-index">Min index <output id="o-index"></output></label>
+            <input type="range" id="f-index" min="0" max="90" step="1"></div>
+        </div>
+        <div class="field"><div class="lab">Min bedrooms</div><div class="chips" id="f-rooms"></div></div>
+        <div class="field"><div class="lab">Sources</div><div class="chips" id="f-src"></div></div>
+        <div class="field">
+          <div class="lab"><span>Municipalities</span>
+            <span><button class="linkbtn" id="m-all">all</button> · <button class="linkbtn" id="m-none">none</button></span></div>
+          <div class="muni-list" id="f-muni"></div>
+        </div>
+        <label class="check"><input type="checkbox" id="f-unknown"> Keep listings with unknown rooms / m² (auctions)</label>
+        <label class="check"><input type="checkbox" id="f-risky"> Hide risky listings (bare ownership, occupied, tenants, partial shares)</label>
+        <label class="check"><input type="checkbox" id="f-favs"> Only favourites ★</label>
+        <label class="check"><input type="checkbox" id="f-hidden"> Show listings I discarded</label>
+        <button class="btn" id="reset">Reset to my criteria (3 rooms · 70 m² · ≤350k)</button>
+      </div>
+    </details>
+
+    <div class="listbar">
+      <span class="cnt" id="cnt"></span>
+      <label for="sort" class="cnt" style="margin:0">Sort</label>
+      <select id="sort">
+        <option value="index">Best index</option>
+        <option value="price">Cheapest</option>
+        <option value="pm2">€/m² lowest</option>
+        <option value="surface">Largest</option>
+        <option value="work">Best work balance</option>
+        <option value="new">Newest</option>
+      </select>
+    </div>
+    <div id="list"></div>
+  </div>
+</aside>
+<div id="map" role="region" aria-label="Map of listings"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const D = /*__DATA__*/null;
+const KEYS = ["work", "sant_cugat", "castelldefels", "affordability"];
+const LABELS = { work: "Work balance", sant_cugat: "Near Sant Cugat", castelldefels: "Near Castelldefels", affordability: "Affordability" };
+const HINTS = { work: "Terrassa ↔ Barcelona", sant_cugat: "", castelldefels: "", affordability: "cheaper = better" };
+const SRC_NAMES = { fotocasa: "Fotocasa", habitaclia: "Habitaclia", idealista: "Idealista", boe: "BOE subastas" };
+const PAGE = 150;
+
+// ---------- persistence (per browser, optional) ----------
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("ip:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("ip:" + k, JSON.stringify(v)); } catch {} },
+};
+const favs = new Set(store.get("favs", []));
+const hidden = new Set(store.get("hidden", []));
+
+const L0 = D.listings;
+const allSources = [...new Set(L0.map(l => l.src))];
+const muniCounts = {};
+L0.forEach(l => muniCounts[l.mu] = (muniCounts[l.mu] || 0) + 1);
+const allMunis = Object.keys(muniCounts).sort((a, b) => a.localeCompare(b, "ca"));
+
+const defaults = () => ({
+  w: Object.fromEntries(KEYS.map(k => [k, Math.round(D.weights[k] * 100)])),
+  maxPrice: D.criteria.max_price, minPrice: 0, minSurf: D.criteria.min_surface_m2,
+  minRooms: D.criteria.min_rooms, minIndex: 0, sources: allSources, munis: allMunis,
+  unknownOk: true, hideRisky: true, favOnly: false, showHidden: false, sort: "index",
+});
+let S = Object.assign(defaults(), store.get("state", {}));
+S.munis = S.munis.filter(m => muniCounts[m]);
+if (!S.munis.length) S.munis = allMunis;
+let shown = PAGE;
+
+// ---------- helpers ----------
+const $ = id => document.getElementById(id);
+const eur = v => v == null ? "–" : v.toLocaleString("es-ES", { maximumFractionDigits: 0 }) + " €";
+const k = v => v >= 1000 ? Math.round(v / 1000) + "k" : String(v);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function indexOf(l) {
+  let tot = 0, sum = 0;
+  KEYS.forEach((key, i) => { tot += S.w[key]; sum += S.w[key] * (l.c[i] ?? 0); });
+  return tot ? sum / tot * 100 : 0;
+}
+
+// color: one-hue sequential ramp across the current p5..p95 of visible indexes
+let domain = [0, 100];
+function hex2rgb(h) { h = h.replace("#", ""); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); }
+function mix(a, b, t) { return a.map((v, i) => Math.round(v + (b[i] - v) * t)); }
+function colorFor(ix) {
+  const t = Math.max(0, Math.min(1, (ix - domain[0]) / ((domain[1] - domain[0]) || 1)));
+  const lo = hex2rgb(css("--ramp-lo")), mid = hex2rgb(css("--ramp-mid")), hi = hex2rgb(css("--ramp-hi"));
+  const c = t < .5 ? mix(lo, mid, t * 2) : mix(mid, hi, (t - .5) * 2);
+  return `rgb(${c.join(",")})`;
+}
+function inkOn(rgb) {
+  const [r, g, b] = rgb.match(/\d+/g).map(Number);
+  return (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? "#0b0b0b" : "#ffffff";
+}
+
+// ---------- map ----------
+const map = L.map("map", { preferCanvas: true, zoomControl: false }).setView([41.39, 2.05], 11);
+L.control.zoom({ position: "topright" }).addTo(map);
+const ESRI = "https://server.arcgisonline.com/ArcGIS/rest/services/";
+const esri = (path, opts = {}) => L.tileLayer(ESRI + path + "/MapServer/tile/{z}/{y}/{x}",
+  Object.assign({ attribution: "Tiles &copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors", maxZoom: 19 }, opts));
+// Esri basemaps work from file:// without an API key (CARTO/OSM tiles refuse keyless or referrer-less use)
+const tiles = {
+  light: [esri("Canvas/World_Light_Gray_Base", { maxNativeZoom: 16 }), esri("Canvas/World_Light_Gray_Reference", { maxNativeZoom: 16 })],
+  dark: [esri("Canvas/World_Dark_Gray_Base", { maxNativeZoom: 16 }), esri("Canvas/World_Dark_Gray_Reference", { maxNativeZoom: 16 })],
+  streets: esri("World_Street_Map"),
+  sat: esri("World_Imagery"),
+};
+const baseStreet = L.layerGroup();
+let base = "street";
+function isDark() {
+  const t = document.documentElement.dataset.theme;
+  return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+}
+function syncTiles() {
+  baseStreet.clearLayers();
+  (isDark() ? tiles.dark : tiles.light).forEach(t => baseStreet.addLayer(t));
+}
+syncTiles();
+baseStreet.addTo(map);
+
+const anchorLayer = L.layerGroup().addTo(map);
+const ringLayer = L.layerGroup();
+Object.entries(D.anchors).forEach(([key, a]) => {
+  const icon = L.divIcon({ className: "", html: `<div class="anchor-pin"><i>${a.role === "work" ? "W" : "★"}</i>${esc(a.label.split(" (")[0])}</div>`, iconSize: null });
+  L.marker([a.lat, a.lon], { icon, keyboard: false, zIndexOffset: 1000 }).bindTooltip(esc(a.label) + (a.role === "work" ? " · work hub" : " · target"), { direction: "top" }).addTo(anchorLayer);
+  [5, 10, 15].forEach(km => L.circle([a.lat, a.lon], { radius: km * 1000, color: "#6f6e69", weight: 1, dashArray: "4 5", fill: false, interactive: false }).addTo(ringLayer));
+});
+L.control.layers({ "Minimal": baseStreet, "Streets": tiles.streets, "Satellite": tiles.sat }, { "Anchors": anchorLayer, "5 / 10 / 15 km rings": ringLayer }, { position: "topright" }).addTo(map);
+map.on("baselayerchange", e => base = e.layer === baseStreet ? "street" : "other");
+
+// legend
+const legend = L.control({ position: "bottomright" });
+legend.onAdd = () => { const d = L.DomUtil.create("div", "legend"); d.id = "legend"; return d; };
+legend.addTo(map);
+function drawLegend() {
+  const steps = [0, .25, .5, .75, 1].map(t => colorFor(domain[0] + t * (domain[1] - domain[0])));
+  $("legend").innerHTML = `<b>Index</b> <span style="color:var(--text-3)">(your weights)</span>
+    <div class="ramp" style="background:linear-gradient(90deg,${steps.join(",")})"></div>
+    <div class="ticks"><span>${Math.round(domain[0])}</span><span>${Math.round((domain[0] + domain[1]) / 2)}</span><span>${Math.round(domain[1])}</span></div>
+    <div class="keys"><span><i class="k-dot"></i>Portal listing</span><span><i class="k-sq"></i>BOE auction</span><span><i class="k-hollow"></i>Approximate location</span></div>`;
+}
+
+const markers = new Map();
+const markerLayer = L.layerGroup().addTo(map);
+function makeMarker(l) {
+  let m;
+  if (l.src === "boe") {
+    m = L.marker([l.lat, l.lon], { icon: L.divIcon({ className: "", html: `<div class="auction-pin"></div>`, iconSize: [14, 14] }), zIndexOffset: 500 });
+  } else {
+    m = L.circleMarker([l.lat, l.lon], { radius: 6, weight: 1.5, color: css("--ring"), fillOpacity: .95 });
+  }
+  m.bindPopup(() => popupHtml(l), { maxWidth: 320, autoPanPadding: [40, 40] });
+  m.on("popupopen", () => { highlightCard(l.id); history.replaceState(null, "", "#l=" + encodeURIComponent(l.id)); });
+  m.on("popupclose", () => history.replaceState(null, "", location.pathname + location.search));
+  m.bindTooltip(() => `${eur(l.p)} · ${Math.round(l._ix)}`, { direction: "top", offset: [0, -6] });
+  return m;
+}
+function styleMarker(l, active) {
+  const m = markers.get(l.id), col = colorFor(l._ix);
+  if (l.src === "boe") {
+    const el = m.getElement()?.firstChild;
+    if (el) { el.style.background = col; el.style.transform = active ? "scale(1.5)" : ""; }
+  } else {
+    m.setStyle({ fillColor: col, color: active ? css("--text") : css("--ring"), radius: active ? 10 : (l._ix >= domain[1] ? 7.5 : 6),
+      dashArray: l.approx ? "2 2" : null, weight: active ? 2.5 : 1.5 });
+  }
+}
+
+// ---------- panel controls ----------
+function buildWeights() {
+  $("weights").innerHTML = KEYS.map(key => `
+    <div class="field"><label for="w-${key}"><span>${LABELS[key]} <span style="color:var(--text-3)">${HINTS[key]}</span></span><output id="ow-${key}"></output></label>
+    <input type="range" id="w-${key}" min="0" max="100" step="5" value="${S.w[key]}"></div>`).join("") +
+    `<div class="wsum">Sliders are relative; the % shown is each one's share of the index. <button class="linkbtn" id="w-reset">Reset 20/30/30/20</button></div>`;
+  KEYS.forEach(key => $("w-" + key).addEventListener("input", e => { S.w[key] = +e.target.value; update(); }));
+  $("w-reset").onclick = () => { S.w = defaults().w; KEYS.forEach(key => $("w-" + key).value = S.w[key]); update(); };
+}
+function syncWeightLabels() {
+  const tot = KEYS.reduce((a, key) => a + S.w[key], 0) || 1;
+  KEYS.forEach(key => $("ow-" + key).textContent = Math.round(S.w[key] / tot * 100) + "%");
+  $("w-summary").textContent = KEYS.map(key => Math.round(S.w[key] / tot * 100)).join(" / ");
+}
+function chipGroup(el, items, isOn, onClick) {
+  el.innerHTML = "";
+  items.forEach(it => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.type = "button"; b.innerHTML = it.html;
+    b.setAttribute("aria-pressed", isOn(it.v));
+    b.onclick = () => { onClick(it.v); chipGroup(el, items, isOn, onClick); update(); };
+    el.appendChild(b);
+  });
+}
+function buildFilters() {
+  const bind = (id, key, fmt) => {
+    const el = $(id); el.value = S[key];
+    const out = $("o-" + id.slice(2));
+    const show = () => out.textContent = fmt(S[key]);
+    show();
+    el.addEventListener("input", () => { S[key] = +el.value; show(); update(); });
+  };
+  bind("f-price", "maxPrice", v => k(v) + " €");
+  bind("f-minprice", "minPrice", v => v ? k(v) + " €" : "any");
+  bind("f-surf", "minSurf", v => v + " m²");
+  bind("f-index", "minIndex", v => v || "any");
+  chipGroup($("f-rooms"), [1, 2, 3, 4, 5].map(n => ({ v: n, html: n + (n === 5 ? "+" : "") })), v => S.minRooms === v, v => S.minRooms = v);
+  const srcCount = {}; L0.forEach(l => srcCount[l.src] = (srcCount[l.src] || 0) + 1);
+  chipGroup($("f-src"), allSources.map(s => ({ v: s, html: `${SRC_NAMES[s] || s}<span class="n">${srcCount[s]}</span>` })),
+    v => S.sources.includes(v), v => S.sources = S.sources.includes(v) ? S.sources.filter(x => x !== v) : [...S.sources, v]);
+  $("f-muni").innerHTML = allMunis.map(m => `<label class="check"><span><input type="checkbox" value="${esc(m)}" ${S.munis.includes(m) ? "checked" : ""}> ${esc(m)}</span><span>${muniCounts[m]}</span></label>`).join("");
+  $("f-muni").onchange = () => { S.munis = [...$("f-muni").querySelectorAll("input:checked")].map(i => i.value); update(); };
+  $("m-all").onclick = () => { S.munis = allMunis; buildFilters(); update(); };
+  $("m-none").onclick = () => { S.munis = []; buildFilters(); update(); };
+  const cb = (id, key) => { $(id).checked = S[key]; $(id).onchange = e => { S[key] = e.target.checked; update(); }; };
+  cb("f-unknown", "unknownOk"); cb("f-risky", "hideRisky"); cb("f-favs", "favOnly"); cb("f-hidden", "showHidden");
+  $("sort").value = S.sort;
+  $("sort").onchange = e => { S.sort = e.target.value; shown = PAGE; update(); };
+}
+$("reset").onclick = () => { const w = S.w; S = defaults(); S.w = w; buildFilters(); update(); };
+
+// ---------- filtering + rendering ----------
+function passes(l) {
+  if (!S.sources.includes(l.src) || !S.munis.includes(l.mu)) return false;
+  if (!l.p || l.p > S.maxPrice || l.p < S.minPrice) return false;
+  if (l.r == null ? !S.unknownOk : l.r < S.minRooms) return false;
+  if (l.s == null ? !S.unknownOk : l.s < S.minSurf) return false;
+  if (l._ix < S.minIndex) return false;
+  if (S.hideRisky && l.warn && l.warn.length) return false;
+  if (S.favOnly && !favs.has(l.id)) return false;
+  if (!S.showHidden && hidden.has(l.id)) return false;
+  return true;
+}
+const SORTS = {
+  index: (a, b) => b._ix - a._ix,
+  price: (a, b) => a.p - b.p,
+  pm2: (a, b) => (a.pm2 ?? 1e9) - (b.pm2 ?? 1e9),
+  surface: (a, b) => (b.s ?? 0) - (a.s ?? 0),
+  work: (a, b) => b.c[0] - a.c[0],
+  new: (a, b) => (b.pub || "").localeCompare(a.pub || ""),
+};
+let visible = [];
+function pct(arr, q) { if (!arr.length) return 0; const s = [...arr].sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.floor(q * s.length))]; }
+
+function update() {
+  syncWeightLabels();
+  L0.forEach(l => l._ix = indexOf(l));
+  visible = L0.filter(passes).sort(SORTS[S.sort]);
+  const ixs = visible.map(l => l._ix);
+  domain = ixs.length ? [pct(ixs, .05), Math.max(pct(ixs, .95), pct(ixs, .05) + 1)] : [0, 100];
+
+  markerLayer.clearLayers();
+  // draw low scores first so the best sit on top
+  [...visible].sort((a, b) => a._ix - b._ix).forEach(l => {
+    if (!markers.has(l.id)) markers.set(l.id, makeMarker(l));
+    markerLayer.addLayer(markers.get(l.id));
+    styleMarker(l, false);
+  });
+  drawLegend();
+  drawStats();
+  drawList();
+  store.set("state", S);
+}
+function drawStats() {
+  $("st-shown").textContent = visible.length.toLocaleString("es-ES");
+  $("st-auc").textContent = visible.filter(l => l.src === "boe").length;
+  $("st-best").textContent = visible.length ? Math.round(Math.max(...visible.map(l => l._ix))) : "–";
+  const pm = visible.map(l => l.pm2).filter(Boolean);
+  $("st-med").textContent = pm.length ? pct(pm, .5).toLocaleString("es-ES") : "–";
+  $("cnt").textContent = `${visible.length.toLocaleString("es-ES")} of ${L0.length.toLocaleString("es-ES")}`;
+}
+function cardHtml(l) {
+  const col = colorFor(l._ix);
+  const facts = [l.r != null ? l.r + " bd" : "? bd", l.s ? Math.round(l.s) + " m²" : "? m²", l.b ? l.b + " ba" : null].filter(Boolean).join(" · ");
+  const srcs = [...new Set([l.src, ...l.also.map(a => a.source)])].map(s => `<span class="src ${s}">${s === "boe" ? "subasta" : s}</span>`).join("")
+    + (l.also.length ? `<span class="pm2">×${l.also.length + 1}</span>` : "")
+    + (l.warn || []).map(w => `<span class="src warn-chip">⚠ ${esc(w)}</span>`).join("");
+  return `<div class="card" data-id="${esc(l.id)}">
+    <div class="thumb" style="${l.img ? `background-image:url('${esc(l.img)}')` : ""}">${l.img ? "" : (l.src === "boe" ? "⚖" : "⌂")}</div>
+    <div style="min-width:0">
+      <div class="top"><span class="price">${eur(l.p)}</span><span class="pm2">${l.pm2 ? l.pm2.toLocaleString("es-ES") + " €/m²" : ""}</span>
+        <span class="badge" style="background:${col};color:${inkOn(col)}">${Math.round(l._ix)}</span></div>
+      <div class="meta">${facts}</div>
+      <div class="where">${esc(l.mu)}${l.d ? " · " + esc(l.d) : ""}</div>
+      <div class="srcs">${srcs}</div>
+    </div>
+    <div class="card-actions">
+      <button class="mini ${favs.has(l.id) ? "on" : ""}" data-act="fav" title="Favourite">${favs.has(l.id) ? "★" : "☆"}</button>
+      <button class="mini" data-act="hide" title="${hidden.has(l.id) ? "Restore" : "Discard"}">${hidden.has(l.id) ? "↺" : "✕"}</button>
+    </div></div>`;
+}
+function drawList() {
+  const el = $("list");
+  if (!visible.length) { el.innerHTML = `<div class="empty">Nothing matches. Loosen a filter or press “Reset”.</div>`; return; }
+  el.innerHTML = visible.slice(0, shown).map(cardHtml).join("") +
+    (visible.length > shown ? `<button class="btn more" id="more">Show ${Math.min(PAGE, visible.length - shown)} more</button>` : "");
+  if ($("more")) $("more").onclick = () => { shown += PAGE; drawList(); };
+}
+const byId = new Map(L0.map(l => [l.id, l]));
+$("list").addEventListener("click", e => {
+  const card = e.target.closest(".card"); if (!card) return;
+  const l = byId.get(card.dataset.id), act = e.target.dataset.act;
+  if (act === "fav") { favs.has(l.id) ? favs.delete(l.id) : favs.add(l.id); store.set("favs", [...favs]); update(); return; }
+  if (act === "hide") { hidden.has(l.id) ? hidden.delete(l.id) : hidden.add(l.id); store.set("hidden", [...hidden]); update(); return; }
+  focusListing(l);
+});
+let hovered = null;
+$("list").addEventListener("mouseover", e => {
+  const card = e.target.closest(".card"); const l = card && byId.get(card.dataset.id);
+  if (l === hovered) return;
+  if (hovered && markers.has(hovered.id)) styleMarker(hovered, false);
+  hovered = l; if (l && markers.has(l.id)) { styleMarker(l, true); markers.get(l.id).bringToFront?.(); }
+});
+$("list").addEventListener("mouseleave", () => { if (hovered) styleMarker(hovered, false); hovered = null; });
+
+function focusListing(l) {
+  map.flyTo([l.lat, l.lon], Math.max(map.getZoom(), 15), { duration: .6 });
+  map.once("moveend", () => markers.get(l.id)?.openPopup());
+}
+function highlightCard(id) {
+  document.querySelectorAll(".card.active").forEach(c => c.classList.remove("active"));
+  let card = document.querySelector(`.card[data-id="${CSS.escape(id)}"]`);
+  if (!card) {
+    const i = visible.findIndex(l => l.id === id);
+    if (i >= shown) { shown = Math.ceil((i + 1) / PAGE) * PAGE; drawList(); card = document.querySelector(`.card[data-id="${CSS.escape(id)}"]`); }
+  }
+  if (card) { card.classList.add("active"); card.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+}
+
+function popupHtml(l) {
+  const col = colorFor(l._ix);
+  const bars = KEYS.map((key, i) => {
+    const v = l.c[i];
+    return `<div class="bar"><span>${LABELS[key]}</span><div class="track"><div class="fill" style="width:${Math.round((v ?? 0) * 100)}%"></div></div><b>${v == null ? "–" : Math.round(v * 100)}</b></div>`;
+  }).join("");
+  const facts = [
+    l.r != null ? `${l.r} bedrooms` : "bedrooms unknown",
+    l.s ? `${Math.round(l.s)} m²` : "m² unknown",
+    l.b ? `${l.b} bath` : "", l.fl ? `floor ${esc(l.fl)}` : "", l.pub ? `since ${l.pub}` : "",
+  ].filter(Boolean).map(x => `<span>${x}</span>`).join("");
+  const a = l.auc;
+  const auc = a && a.id ? `<div class="auc">
+      <div><b>BOE auction · ${esc(a.state || "")}</b></div>
+      ${a.end ? `<div>Closes <b style="color:var(--text)">${new Date(a.end).toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" })}</b></div>` : ""}
+      <div>Auction value ${eur(a.value)}${a.appraisal ? ` · appraisal ${eur(a.appraisal)}` : ""}</div>
+      <div>Deposit ${eur(a.deposit)}${a.min_bid ? ` · min bid: ${esc(a.min_bid)}` : ""}</div>
+      ${a.claimed ? `<div>Debt claimed ${eur(a.claimed)}</div>` : ""}
+      <div>Possession: ${esc(a.possession || "–")} · Visitable: ${esc(a.visitable || "–")}${a.year_built ? ` · built ${a.year_built}` : ""}</div>
+    </div>` : "";
+  const also = l.also.slice(0, 3).map(x => `<a class="btn" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(SRC_NAMES[x.source] || x.source)} ↗</a>`).join("") + (l.also.length > 3 ? `<span class="warn">+${l.also.length - 3} more copies</span>` : "");
+  const warn = (l.warn || []).length ? `<div class="warnbox">⚠ ${l.warn.map(esc).join(" · ")} — check before visiting</div>` : "";
+  return `<div class="pop-img" style="${l.img ? `background-image:url('${esc(l.img.replace("web_328x246_ar", "web_580x387_ar"))}')` : ""}">
+      <span class="badge" style="background:${col};color:${inkOn(col)}">Index ${Math.round(l._ix)}</span></div>
+    <div class="pop-body">
+      <div class="pop-title">${esc(l.t)}</div>
+      <div class="pop-price"><span class="price">${eur(l.p)}</span><span class="pm2">${l.pm2 ? l.pm2.toLocaleString("es-ES") + " €/m²" : ""}</span></div>
+      <div class="facts">${facts}</div>
+      <div class="where">${esc([l.a, l.d, l.mu].filter(Boolean).join(" · "))}</div>
+      <div class="bars">${bars}</div>
+      <div class="dists">Straight line: Terrassa ${l.km[0]} km · Barcelona ${l.km[1]} km · Sant Cugat ${l.km[2]} km · Castelldefels ${l.km[3]} km · work rating ${(l.c[0] * 10).toFixed(1)}/10</div>
+      ${warn}
+      ${auc}
+      ${l.approx ? `<div class="warn">Approximate pin: the exact address isn't published, so it sits at the area/postcode centre.</div>` : ""}
+      <div class="pop-links">
+        <a class="btn primary" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(SRC_NAMES[l.src] || l.src)} ↗</a>${also}
+        <button class="btn" onclick="toggleFav('${esc(l.id)}')">${favs.has(l.id) ? "★ Saved" : "☆ Save"}</button>
+      </div>
+    </div>`;
+}
+window.toggleFav = id => {
+  favs.has(id) ? favs.delete(id) : favs.add(id); store.set("favs", [...favs]);
+  const m = markers.get(id); update(); if (m && markerLayer.hasLayer(m)) m.openPopup();
+};
+
+// ---------- theme / layout ----------
+const themes = [null, "light", "dark"];
+let theme = store.get("theme", null);
+function applyTheme() {
+  if (theme) document.documentElement.dataset.theme = theme; else delete document.documentElement.dataset.theme;
+  $("theme").title = "Theme: " + (theme || "auto");
+  if (base === "street") syncTiles();
+  if (visible.length) update();
+}
+$("theme").onclick = () => { theme = themes[(themes.indexOf(theme) + 1) % 3]; store.set("theme", theme); applyTheme(); };
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
+$("toggle-panel").onclick = () => { document.body.classList.toggle("panel-max"); setTimeout(() => map.invalidateSize(), 50); };
+
+const fr = Object.entries(D.fetched).map(([s, t]) => `${SRC_NAMES[s] || s} ${t.slice(0, 10)}`).join(" · ");
+$("fresh").textContent = fr ? "Data: " + fr : "";
+
+buildWeights();
+buildFilters();
+applyTheme();
+update();
+const deep = decodeURIComponent((location.hash.match(/^#l=(.+)$/) || [])[1] || "");
+if (deep && byId.has(deep)) {
+  const l = byId.get(deep);
+  if (!visible.includes(l)) { S.showHidden = true; S.favOnly = false; }  // make sure it's on the map
+  if (!passes(l)) visible.push(l), markerLayer.addLayer(markers.get(l.id) || (markers.set(l.id, makeMarker(l)), markers.get(l.id))), styleMarker(l, false);
+  // centre a bit below the pin so the popup above it fits on screen
+  const pt = map.project([l.lat, l.lon], 15).subtract([0, 200]);
+  map.setView(map.unproject(pt, 15), 15, { animate: false });
+  setTimeout(() => markers.get(l.id).openPopup(), 50);
+} else if (visible.length) {
+  map.fitBounds(L.latLngBounds(visible.map(l => [l.lat, l.lon])).pad(0.05));
+}
+</script>
+</body>
+</html>

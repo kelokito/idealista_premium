@@ -1,0 +1,114 @@
+# Idealista Premium - search, zone and scoring configuration.
+# Everything the scrapers, the scoring and the map use lives here.
+
+# --- Hard filters (the "puntuation" gate) -----------------------------------
+# A listing "meets criteria" when it passes all three. The map starts with these
+# values but lets you loosen/tighten them live.
+criteria:
+  min_rooms: 3
+  min_surface_m2: 70
+  max_price: 350000
+
+# What we ask the portals for. Slightly wider than `criteria` so the map can
+# show near-misses (e.g. 360k) when you relax the slider.
+search:
+  min_rooms: 3
+  min_surface_m2: 70
+  max_price: 400000
+
+# --- Scoring ------------------------------------------------------------------
+# index = 100 * sum(weight * component), every component in [0, 1].
+weights:
+  work: 0.20          # balance between Terrassa centre and Barcelona
+  sant_cugat: 0.30
+  castelldefels: 0.30
+  affordability: 0.20
+
+# Straight-line proximity: 1.0 within `full_km`, falling linearly to 0 at `zero_km`.
+proximity:
+  full_km: 3
+  zero_km: 30
+
+# Work = mix of the average closeness to both job hubs and the *worst* of the two,
+# so a home right next to one hub but far from the other is penalised.
+work:
+  balance_weight: 0.5   # 0 = plain average, 1 = only the farthest hub counts
+
+# Cheaper is better: price <= best_price -> 1.0, price >= worst_price -> 0.0.
+affordability:
+  best_price: 200000
+  worst_price: 400000
+
+anchors:
+  terrassa:      {label: "Terrassa centre (Plaça Vella)", lat: 41.5620, lon: 2.0108, role: work}
+  barcelona:     {label: "Barcelona (Pl. Catalunya)",     lat: 41.3873, lon: 2.1688, role: work}
+  sant_cugat:    {label: "Sant Cugat (Monestir)",         lat: 41.4739, lon: 2.0854, role: target}
+  castelldefels: {label: "Castelldefels centre",          lat: 41.2805, lon: 1.9770, role: target}
+
+# --- Zone ---------------------------------------------------------------------
+# `slug` is the URL segment used by both Fotocasa and Habitaclia.
+# Set `enabled: false` to skip a municipality; the "extended" ones sit just
+# outside the Barcelona / Castelldefels / Sant Cugat triangle and are off by default.
+municipalities:
+  - {name: "Barcelona",                  slug: barcelona-capital,         lat: 41.3826, lon: 2.1771, enabled: true}
+  - {name: "L'Hospitalet de Llobregat",  slug: l-hospitalet-de-llobregat, lat: 41.3595, lon: 2.0996, enabled: true}
+  - {name: "Esplugues de Llobregat",     slug: esplugues-de-llobregat,    lat: 41.3778, lon: 2.0886, enabled: true}
+  - {name: "Sant Just Desvern",          slug: sant-just-desvern,         lat: 41.3858, lon: 2.0758, enabled: true}
+  - {name: "Sant Joan Despí",            slug: sant-joan-despi,           lat: 41.3668, lon: 2.0570, enabled: true}
+  - {name: "Cornellà de Llobregat",      slug: cornella-de-llobregat,     lat: 41.3557, lon: 2.0706, enabled: true}
+  - {name: "Sant Feliu de Llobregat",    slug: sant-feliu-de-llobregat,   lat: 41.3813, lon: 2.0446, enabled: true}
+  - {name: "Molins de Rei",              slug: molins-de-rei,             lat: 41.4138, lon: 2.0160, enabled: true}
+  - {name: "Pallejà",                    slug: palleja,                   lat: 41.4223, lon: 1.9967, enabled: true}
+  - {name: "Sant Vicenç dels Horts",     slug: sant-vicenc-dels-horts,    lat: 41.3934, lon: 2.0099, enabled: true}
+  - {name: "Santa Coloma de Cervelló",   slug: santa-coloma-de-cervello,  lat: 41.3687, lon: 2.0175, enabled: true}
+  - {name: "Torrelles de Llobregat",     slug: torrelles-de-llobregat,    lat: 41.3565, lon: 1.9816, enabled: true}
+  - {name: "Sant Boi de Llobregat",      slug: sant-boi-de-llobregat,     lat: 41.3241, lon: 2.0511, enabled: true}
+  - {name: "El Prat de Llobregat",       slug: el-prat-de-llobregat,      lat: 41.3306, lon: 2.0931, enabled: true}
+  - {name: "Viladecans",                 slug: viladecans,                lat: 41.3163, lon: 2.0156, enabled: true}
+  - {name: "Gavà",                       slug: gava,                      lat: 41.3051, lon: 2.0063, enabled: true}
+  - {name: "Castelldefels",              slug: castelldefels,             lat: 41.2861, lon: 1.9824, enabled: true}
+  - {name: "Begues",                     slug: begues,                    lat: 41.3328, lon: 1.9255, enabled: true}
+  - {name: "Sant Cugat del Vallès",      slug: sant-cugat-del-valles,     lat: 41.4708, lon: 2.0849, enabled: true}
+  # Sitges only counts for Les Botigues de Sitges (see `restrict`).
+  - name: "Sitges"
+    slug: sitges
+    lat: 41.2645
+    lon: 1.9417
+    enabled: true
+    restrict: {label: "Les Botigues de Sitges", lat: 41.2645, lon: 1.9417, radius_km: 1.8, district_keyword: botigues}
+  # Extended ring (off by default)
+  - {name: "Cerdanyola del Vallès",      slug: cerdanyola-del-valles,     lat: 41.4910, lon: 2.1406, enabled: false}
+  - {name: "Rubí",                       slug: rubi,                      lat: 41.4936, lon: 2.0319, enabled: false}
+  - {name: "Sant Andreu de la Barca",    slug: sant-andreu-de-la-barca,   lat: 41.4500, lon: 1.9720, enabled: false}
+  - {name: "Cervelló",                   slug: cervello,                  lat: 41.3964, lon: 1.9586, enabled: false}
+  - {name: "Vallirana",                  slug: vallirana,                 lat: 41.3878, lon: 1.9321, enabled: false}
+  - {name: "Castellbisbal",              slug: castellbisbal,             lat: 41.4765, lon: 1.9833, enabled: false}
+
+# --- Sources ------------------------------------------------------------------
+sources:
+  fotocasa:
+    enabled: true
+    max_pages_per_municipality: 150
+  habitaclia:
+    enabled: true
+    max_pages_per_municipality: 150
+  boe:
+    enabled: true
+    # PU = próxima apertura, EJ = celebrándose (open for bids)
+    states: [EJ, PU]
+  idealista:
+    # Idealista blocks scraping; it offers an official API instead.
+    # Request a key at https://developers.idealista.com/access-request and set
+    # IDEALISTA_API_KEY / IDEALISTA_API_SECRET in your environment or a .env file.
+    # The free tier allows ~100 requests/month, so the search uses a few big circles.
+    enabled: true
+    max_pages_per_circle: 10
+    circles:
+      - {label: "Barcelona",      lat: 41.400, lon: 2.160, radius_m: 7000}
+      - {label: "Baix Llobregat", lat: 41.340, lon: 2.020, radius_m: 11000}
+      - {label: "Sant Cugat",     lat: 41.470, lon: 2.075, radius_m: 5000}
+
+http:
+  min_delay_s: 1.5
+  max_delay_s: 3.5
+  timeout_s: 30
